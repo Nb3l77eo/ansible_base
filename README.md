@@ -84,3 +84,23 @@ changed_when: create_db.rc == 0 - успешное выполнение таск
 
 ### Task: Enable vector service 
 Перезапуск vector
+
+## Play: "Install lighthouse"
+
+### Task: Install epel-release
+Подключение репозитория и установка утилит.
+
+### Task: Install nginx
+Установка web сервера.
+
+### Task: Download lighthouse
+Загрузка пакета lighthouse.
+
+### Task: Unzip lighthouse
+Распаковка архива с lighthouse. 
+
+### Task: Add conf lighthouse to nginx
+Добавление файла конфигурации для возможности обращаться к clickhouse не только по 127.0.0.1.
+
+### Task: Start nginx
+Запуск процесса Nginx.
