@@ -88,11 +88,13 @@
         - epel-release
         - unzip
         - zip
+        - mc
         state: present
     - name: Install nginx
       become: true
       ansible.builtin.yum:
         name:
+        - wget
         - nginx
         state: installed
     - name: Download lighthouse
