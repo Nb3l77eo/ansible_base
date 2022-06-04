@@ -52,5 +52,21 @@
       become: true
       ansible.builtin.yum:
         name: "/tmp/vector-{{ vector_version }}-1.x86_64.rpm"
+    - name: Create vector config
+      become: true
+      ansible.builtin.template:
+        src: vector.toml.j2
+        dest: /etc/vector/vector.toml
+        owner: root
+        group: wheel
+        mode: '755'
+    - name: Validate vector config
+      become: true
+      ansible.builtin.command: "vector validate"
     - name: "Get vector version"
       ansible.builtin.command: "vector --version"
+    - name: Enable vector service 
+      become: true
+      ansible.builtin.service:
+        name: vector
+        state: restarted

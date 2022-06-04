@@ -75,3 +75,12 @@ changed_when: create_db.rc == 0 - успешное выполнение таск
 
 ### Taks: Get vector version 
 Таска запроса установленной версии вектора ("vector --version") - в случае наличия установленного вектора таска не вернет положительный результат.
+
+### Create vector config
+Создание конфигурационного файла vector
+
+### Validate vector config
+Проверка конфигурационного файла vector
+
+### Enable vector service 
+Перезапуск vector
