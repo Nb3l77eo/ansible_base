@@ -4,7 +4,7 @@
 Данный play состоит из тасок выполняемых на группе узлов "clickhouse".<p>
 Используется для установки Clickhouse. Выполняется на группе хостов "clickhouse".
 
-### Taks: Get clickhouse distrib 
+### Task: Get clickhouse distrib 
 ```
 - block:
     - name: Get clickhouse distrib
@@ -25,7 +25,7 @@
 {{ item }} - перечисление пакетов необходимых к установке указанных в group_vars/clickhouse/vars.yml
 
 
-### Taks: Install clickhouse packages 
+### Task: Install clickhouse packages 
 ```
 - name: Install clickhouse packages
     become: true
@@ -39,7 +39,7 @@
 
 
 
-### Taks: Start clickhouse service 
+### Task: Start clickhouse service 
 ```
 - name: Start clickhouse service
     become: true
@@ -49,7 +49,7 @@
 ```
 Модуль управления службами. В данном описании мы перезапускам необходимую нам службу указав атрибут name (имя службы) и state (необходимый результат после исполнения модуля)
 
-### Taks: Create database 
+### Task: Create database 
 ```
 - name: Create database
     ansible.builtin.command: "clickhouse-client -q 'create database logs;'"
@@ -67,20 +67,20 @@ changed_when: create_db.rc == 0 - успешное выполнение таск
 ## Play: "Install vector"
 Выполняется на группе хостов "vector".
 
-### Taks: Download vector 
+### Task: Download vector 
 Загрузка дистрибутивов "vector".
 
-### Taks: Install vector 
+### Task: Install vector 
 Установка "vector" из ранее загруженных дистрибутивов.
 
-### Taks: Get vector version 
+### Task: Get vector version 
 Таска запроса установленной версии вектора ("vector --version") - в случае наличия установленного вектора таска не вернет положительный результат.
 
-### Create vector config
+### Task: Create vector config
 Создание конфигурационного файла vector
 
-### Validate vector config
+### Task: Validate vector config
 Проверка конфигурационного файла vector
 
-### Enable vector service 
+### Task: Enable vector service 
 Перезапуск vector
