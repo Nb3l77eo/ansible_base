@@ -39,6 +39,14 @@
       register: create_db
       failed_when: create_db.rc != 0 and create_db.rc !=82
       changed_when: create_db.rc == 0
+    - name: Add conf clickhouse
+      become: true
+      ansible.builtin.template:
+        src: clickhouse.conf.yaml.j2
+        dest: /etc/clickhouse-server/config.d/clickhouse.conf.yaml
+        owner: clickhouse
+        group: clickhouse
+        mode: '0644'
 - name: Install vector
   hosts: vector
   tags: 
@@ -54,3 +62,42 @@
         name: "/tmp/vector-{{ vector_version }}-1.x86_64.rpm"
     - name: "Get vector version"
       ansible.builtin.command: "vector --version"
+- name: Install lighthouse
+  hosts: lighthouse
+  tasks:
+    - name: Install epel-release
+      become: true
+      ansible.builtin.yum:
+        name:
+        - epel-release
+        - unzip
+        - zip
+        - mc
+        state: present
+    - name: Install nginx
+      become: true
+      ansible.builtin.yum:
+        name:
+        - wget
+        - nginx
+        state: installed
+    - name: Download lighthouse
+      ansible.builtin.get_url:
+        url: https://github.com/VKCOM/lighthouse/archive/refs/heads/master.zip
+        dest: /tmp/lighthouse.zip
+    - name: Unzip lighthouse
+      become: true
+      ansible.builtin.command: "unzip /tmp/lighthouse.zip -d /usr/share"
+    - name: Add conf lighthouse to nginx
+      become: true
+      ansible.builtin.template:
+        src: nginx-lighthouse.j2
+        dest: /etc/nginx/conf.d/lighthouse.conf
+        owner: nginx
+        group: wheel
+        mode: '0644'
+    - name: Start nginx
+      become: true
+      ansible.builtin.service:
+        name: nginx
+        state: restarted
