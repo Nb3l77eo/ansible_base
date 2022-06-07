@@ -1,13 +1,16 @@
 ---
 - name: Install Clickhouse
   hosts: clickhouse
-  # handlers:
-  #   - name: Start clickhouse service
-  #     become: true
-  #     ansible.builtin.service:
-  #       name: clickhouse-server
-  #       state: restarted
+
+  handlers:
+    - name: Start clickhouse service
+      become: true
+      ansible.builtin.service:
+        name: clickhouse-server
+        state: restarted
+
   tasks:
+
     - block:
         - name: Get clickhouse distrib
           ansible.builtin.get_url:
@@ -19,6 +22,7 @@
           ansible.builtin.get_url:
             url: "https://packages.clickhouse.com/rpm/stable/clickhouse-common-static-{{ clickhouse_version }}.x86_64.rpm"
             dest: "./clickhouse-common-static-{{ clickhouse_version }}.rpm"
+
     - name: Install clickhouse packages
       become: true
       ansible.builtin.yum:
@@ -26,40 +30,63 @@
           - clickhouse-server-{{ clickhouse_version }}.rpm
           - clickhouse-common-static-{{ clickhouse_version }}.rpm
           - clickhouse-client-{{ clickhouse_version }}.rpm
-      # notify: Start clickhouse service
-    # - name: Flush handlers
-    #   ansible.builtin.meta: flush_handlers
+      notify: Start clickhouse service
+
+    - name: Flush handlers
+      ansible.builtin.meta: flush_handlers
+
     - name: Start clickhouse service
       become: true
       ansible.builtin.service:
         name: clickhouse-server
         state: restarted
+
     - name: Create database
       ansible.builtin.command: "clickhouse-client -q 'create database logs;'"
       register: create_db
       failed_when: create_db.rc != 0 and create_db.rc !=82
       changed_when: create_db.rc == 0
+
+    - name: Create my_table
+      ansible.builtin.command: "clickhouse-client -q 'CREATE TABLE logs.my_table
+        (
+            `appname` String,
+            `facility` String,
+            `hostname` String,
+            `message` String,
+            `msgid` String,
+            `procid` UInt32,
+            `severity` String,
+            `timestamp` String,
+            `version` UInt32
+        )
+        ENGINE = MergeTree
+        ORDER BY timestamp;'"
+
     - name: Add conf clickhouse
       become: true
       ansible.builtin.template:
         src: clickhouse.conf.yaml.j2
-        dest: /etc/clickhouse-server/config.d/clickhouse.conf.yaml
+        dest: {{ clickhouse_add_conf }}
         owner: clickhouse
         group: clickhouse
         mode: '0644'
+
 - name: Install vector
   hosts: vector
-  tags: 
+  tags:
     - vector_install
   tasks:
     - name: Download vector
       ansible.builtin.get_url:
-        url: "https://packages.timber.io/vector/{{ vector_version }}/vector-{{ vector_version }}-1.x86_64.rpm"
-        dest: "/tmp/vector-{{ vector_version }}-1.x86_64.rpm"
+        url: "{{ vector_url }}"
+        dest: "{{ vector_distr }}"
+
     - name: Install vector
       become: true
       ansible.builtin.yum:
         name: "/tmp/vector-{{ vector_version }}-1.x86_64.rpm"
+
     - name: Create vector config
       become: true
       ansible.builtin.template:
@@ -68,16 +95,20 @@
         owner: root
         group: wheel
         mode: '755'
+
     - name: Validate vector config
       become: true
       ansible.builtin.command: "vector validate"
+
     - name: "Get vector version"
       ansible.builtin.command: "vector --version"
-    - name: Enable vector service 
+
+    - name: Enable vector service
       become: true
       ansible.builtin.service:
         name: vector
         state: restarted
+
 - name: Install lighthouse
   hosts: lighthouse
   tasks:
@@ -103,7 +134,10 @@
         dest: /tmp/lighthouse.zip
     - name: Unzip lighthouse
       become: true
-      ansible.builtin.command: "unzip /tmp/lighthouse.zip -d /usr/share"
+      ansible.builtin.unarchive:
+        src: "/tmp/lighthouse.zip"
+        dest: "/usr/share"
+        remote_src: yes
     - name: Add conf lighthouse to nginx
       become: true
       ansible.builtin.template:

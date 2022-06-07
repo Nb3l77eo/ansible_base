@@ -13,8 +13,17 @@ source = '''
 . = parse_syslog!(string!(.message))
 '''
 
-# Print parsed logs to stdout
-[sinks.print]
-type = "console"
-inputs = ["parse_logs"]
-encoding.codec = "json"
+## Print parsed logs to stdout
+#[sinks.print]
+#type = "console"
+#inputs = ["parse_logs"]
+#encoding.codec = "json"
+
+[sinks.output_clickhouse]
+inputs   = ["parse_logs"]
+type     = "clickhouse"
+database = "logs"
+healthcheck = false
+endpoint = "http://{{ hostvars['clickhouse-01']['ansible_host'] }}:8123" #  Адрес Clickhouse
+table = "my_table"
+compression = "gzip"

@@ -1,2 +1,23 @@
 ---
-vector_version: "0.21.2" # or "latest"
+vector_url: "https://packages.timber.io/vector/{{ vector_version }}/vector-{{ vector_version }}-1.x86_64.rpm"
+vector_distr: "/tmp/vector-{{ vector_version }}-1.x86_64.rpm"
+vector_version: "0.21.2"
+# vector_config:
+#   sources:
+#     our_log:
+#       type: file
+#       ignore_older_secs: 600
+#       include:
+#         - /home/vagrant/logs/*.log
+#       read_from: beginning
+#   sinks:
+#     to_clickhouse:
+#       type: clickhouse
+#       inputs:
+#         - our_log
+#       database: custom
+#       endpoint: http://{{ vector-01 }}:8123
+#       table: my_table
+#       compression: gzip
+#       healthcheck: false
+#       skip_unknown_fields: true
