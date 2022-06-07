@@ -1,84 +1,20 @@
 ---
-- name: Install Clickhouse
+- name: Install Clickhouse role
   hosts: clickhouse
-  # handlers:
-  #   - name: Start clickhouse service
-  #     become: true
-  #     ansible.builtin.service:
-  #       name: clickhouse-server
-  #       state: restarted
-  tasks:
-    - block:
-        - name: Get clickhouse distrib
-          ansible.builtin.get_url:
-            url: "https://packages.clickhouse.com/rpm/stable/{{ item }}-{{ clickhouse_version }}.noarch.rpm"
-            dest: "./{{ item }}-{{ clickhouse_version }}.rpm"
-          with_items: "{{ clickhouse_packages }}"
-      rescue:
-        - name: Get clickhouse distrib
-          ansible.builtin.get_url:
-            url: "https://packages.clickhouse.com/rpm/stable/clickhouse-common-static-{{ clickhouse_version }}.x86_64.rpm"
-            dest: "./clickhouse-common-static-{{ clickhouse_version }}.rpm"
-    - name: Install clickhouse packages
-      become: true
-      ansible.builtin.yum:
-        name:
-          - clickhouse-server-{{ clickhouse_version }}.rpm
-          - clickhouse-common-static-{{ clickhouse_version }}.rpm
-          - clickhouse-client-{{ clickhouse_version }}.rpm
-      # notify: Start clickhouse service
-    # - name: Flush handlers
-    #   ansible.builtin.meta: flush_handlers
-    - name: Start clickhouse service
-      become: true
-      ansible.builtin.service:
-        name: clickhouse-server
-        state: restarted
-    - name: Create database
-      ansible.builtin.command: "clickhouse-client -q 'create database logs;'"
-      register: create_db
-      failed_when: create_db.rc != 0 and create_db.rc !=82
-      changed_when: create_db.rc == 0
-    - name: Add conf clickhouse
-      become: true
-      ansible.builtin.template:
-        src: clickhouse.conf.yaml.j2
-        dest: /etc/clickhouse-server/config.d/clickhouse.conf.yaml
-        owner: clickhouse
-        group: clickhouse
-        mode: '0644'
-- name: Install vector
+  roles:
+    - clickhouse
+
+- name: Install vector role
   hosts: vector
-  tags: 
-    - vector_install
-  tasks:
-    - name: Download vector
-      ansible.builtin.get_url:
-        url: "https://packages.timber.io/vector/{{ vector_version }}/vector-{{ vector_version }}-1.x86_64.rpm"
-        dest: "/tmp/vector-{{ vector_version }}-1.x86_64.rpm"
-    - name: Install vector
-      become: true
-      ansible.builtin.yum:
-        name: "/tmp/vector-{{ vector_version }}-1.x86_64.rpm"
-    - name: Create vector config
-      become: true
-      ansible.builtin.template:
-        src: vector.toml.j2
-        dest: /etc/vector/vector.toml
-        owner: root
-        group: wheel
-        mode: '755'
-    - name: Validate vector config
-      become: true
-      ansible.builtin.command: "vector validate"
-    - name: "Get vector version"
-      ansible.builtin.command: "vector --version"
-    - name: Enable vector service 
-      become: true
-      ansible.builtin.service:
-        name: vector
-        state: restarted
-- name: Install lighthouse
+  roles:
+    - vector
+
+- name: Install lighthouse role
+  hosts: lighthouse
+  roles:
+    - lighthouse
+
+- name: Install nginx
   hosts: lighthouse
   tasks:
     - name: Install epel-release
@@ -86,32 +22,24 @@
       ansible.builtin.yum:
         name:
         - epel-release
-        - unzip
-        - zip
-        - mc
         state: present
+
     - name: Install nginx
       become: true
       ansible.builtin.yum:
         name:
-        - wget
         - nginx
         state: installed
-    - name: Download lighthouse
-      ansible.builtin.get_url:
-        url: https://github.com/VKCOM/lighthouse/archive/refs/heads/master.zip
-        dest: /tmp/lighthouse.zip
-    - name: Unzip lighthouse
-      become: true
-      ansible.builtin.command: "unzip /tmp/lighthouse.zip -d /usr/share"
+
     - name: Add conf lighthouse to nginx
       become: true
       ansible.builtin.template:
-        src: nginx-lighthouse.j2
+        src: nginx-lighthouse.conf.j2
         dest: /etc/nginx/conf.d/lighthouse.conf
         owner: nginx
         group: wheel
         mode: '0644'
+
     - name: Start nginx
       become: true
       ansible.builtin.service:
