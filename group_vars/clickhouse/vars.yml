@@ -1,3 +1,14 @@
 ---
 clickhouse_listen_host:
   - "::"
+
+clickhouse_networks_default:
+  - "::/0"
+
+
+clickhouse_dbs_custom:
+      - { name: logs }
+
+
+
+

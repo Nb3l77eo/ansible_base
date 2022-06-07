@@ -4,6 +4,25 @@
   roles:
     - clickhouse
 
+- name: Create my_table
+  hosts: clickhouse
+  tasks:
+  - ansible.builtin.command: "clickhouse-client -q 'CREATE TABLE logs.my_table
+      (
+          `appname` String,
+          `facility` String,
+          `hostname` String,
+          `message` String,
+          `msgid` String,
+          `procid` UInt32,
+          `severity` String,
+          `timestamp` String,
+          `version` UInt32
+      )
+      ENGINE = MergeTree
+      ORDER BY timestamp;'"
+
+
 - name: Install vector role
   hosts: vector
   roles:
